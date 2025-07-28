@@ -1,219 +1,119 @@
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/CodeCraftLua/UILib/main/Orion.lua"))()
-
-local Window = OrionLib:MakeWindow({
-    Name = "🎯 Aimbot - Murder vs Sheriff",
-    HidePremium = false,
-    SaveConfig = false,
-    ConfigFolder = "AimDroid",
-})
-
-local targetPart = "HumanoidRootPart"
-local fovRadius = 100
-local aimbotEnabled = true
-local teamCheck = true
-local wallCheck = true
-local hitboxSize = 15
-local hitboxTransparency = 0.7
-local hitboxColor = BrickColor.new("Lime green")
-local hitboxEnabled = true
-
-local uiVisible = true
-local function toggleUI()
-    uiVisible = not uiVisible
-    for _, v in pairs(game:GetService("CoreGui"):GetChildren()) do
-        if v.Name == "Orion" then
-            v.Enabled = uiVisible
-        end
-    end
-end
-
-local toggleBtn = Instance.new("TextButton")
-toggleBtn.Parent = game.CoreGui
-toggleBtn.Text = "🎭"
-toggleBtn.Size = UDim2.new(0, 50, 0, 50)
-toggleBtn.Position = UDim2.new(0, 10, 0.5, -25)
-toggleBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-toggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-toggleBtn.TextSize = 25
-toggleBtn.Active = true
-toggleBtn.Draggable = true
-toggleBtn.MouseButton1Click:Connect(toggleUI)
-
-local Tab = Window:MakeTab({
-    Name = "Aimbot",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-Tab:AddToggle({
-    Name = "Enable Aimbot",
-    Default = true,
-    Callback = function(Value)
-        aimbotEnabled = Value
-    end
-})
-
-Tab:AddToggle({
-    Name = "Team Check",
-    Default = true,
-    Callback = function(Value)
-        teamCheck = Value
-    end
-})
-
-Tab:AddToggle({
-    Name = "Wall Check (Raycast)",
-    Default = true,
-    Callback = function(Value)
-        wallCheck = Value
-    end
-})
-
-Tab:AddSlider({
-    Name = "FOV Radius",
-    Min = 30,
-    Max = 300,
-    Default = 100,
-    Color = Color3.fromRGB(0, 200, 255),
-    Increment = 1,
-    ValueName = "px",
-    Callback = function(Value)
-        fovRadius = Value
-        fovCircle.Radius = fovRadius
-    end
-})
-
-Tab:AddDropdown({
-    Name = "Target Part",
-    Default = "Body",
-    Options = {"Head", "Body", "Leg"},
-    Callback = function(Value)
-        if Value == "Head" then
-            targetPart = "Head"
-        elseif Value == "Body" then
-            targetPart = "HumanoidRootPart"
-        elseif Value == "Leg" then
-            targetPart = "LeftFoot"
-        end
-    end
-})
-
-Tab:AddToggle({
-    Name = "Enable Hitbox Expander",
-    Default = true,
-    Callback = function(Value)
-        hitboxEnabled = Value
-    end
-})
-
-Tab:AddSlider({
-    Name = "Hitbox Size",
-    Min = 5,
-    Max = 50,
-    Default = 15,
-    Increment = 1,
-    Callback = function(Value)
-        hitboxSize = Value
-    end
-})
-
-Tab:AddSlider({
-    Name = "Hitbox Transparency",
-    Min = 0,
-    Max = 1,
-    Default = 0.7,
-    Increment = 0.1,
-    Callback = function(Value)
-        hitboxTransparency = Value
-    end
-})
-
-Tab:AddColorPicker({
-    Name = "Hitbox Color",
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(Value)
-        hitboxColor = BrickColor.new(Value)
-    end
-})
-
-local fovCircle = Drawing.new("Circle")
-fovCircle.Color = Color3.fromRGB(255, 255, 255)
-fovCircle.Thickness = 2
-fovCircle.Radius = fovRadius
-fovCircle.Filled = false
-fovCircle.Transparency = 0.5
-fovCircle.Visible = true
-
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
-local Mouse = LocalPlayer:GetMouse()
 
-function isVisible(part)
-    local origin = Camera.CFrame.Position
-    local direction = (part.Position - origin)
-    local rayParams = RaycastParams.new()
-    rayParams.FilterDescendantsInstances = {LocalPlayer.Character}
-    rayParams.FilterType = Enum.RaycastFilterType.Blacklist
-    rayParams.IgnoreWater = true
-    local result = workspace:Raycast(origin, direction, rayParams)
-    if result and result.Instance then
-        return result.Instance:IsDescendantOf(part.Parent)
-    end
-    return true
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "🎯 AimbotUI"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui") -- Compatible with Delta
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 230, 0, 160)
+MainFrame.Position = UDim2.new(0.5, -115, 0.5, -80)
+MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+MainFrame.BackgroundTransparency = 0.2
+MainFrame.BorderSizePixel = 0
+MainFrame.Parent = ScreenGui
+
+local dragging, dragInput, dragStart, startPos
+MainFrame.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = MainFrame.Position
+
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+		local delta = input.Position - dragStart
+		MainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+local Title = Instance.new("TextLabel")
+Title.Text = "🎯 Aimbot UI"
+Title.Size = UDim2.new(1, 0, 0, 25)
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 16
+Title.Parent = MainFrame
+
+local Close = Instance.new("TextButton")
+Close.Text = "🎭"
+Close.Size = UDim2.new(0, 30, 0, 25)
+Close.Position = UDim2.new(1, -30, 0, 0)
+Close.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Close.TextColor3 = Color3.new(1, 1, 1)
+Close.Parent = MainFrame
+
+local isClosed = false
+Close.MouseButton1Click:Connect(function()
+	isClosed = not isClosed
+	MainFrame.Visible = not isClosed
+end)
+
+
+
+local AimbotEnabled = true
+local SelectedPart = "HumanoidRootPart" -- Options: Head, HumanoidRootPart, LeftFoot
+local FOVRadius = 80
+local TeamCheck = true
+local WallCheck = true
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Radius = FOVRadius
+fovCircle.Thickness = 1.5
+fovCircle.Filled = false
+fovCircle.Color = Color3.fromRGB(255, 255, 255)
+fovCircle.Visible = true
+
+local function IsVisible(part)
+	local origin = Camera.CFrame.Position
+	local direction = (part.Position - origin).Unit * 1000
+	local result = workspace:Raycast(origin, direction, RaycastParams.new())
+	if result and result.Instance:IsDescendantOf(part.Parent) then
+		return true
+	end
+	return false
 end
 
-function getClosestPlayer()
-    local closestPlayer = nil
-    local shortestDistance = fovRadius
+local function GetClosest()
+	local closest, distance = nil, math.huge
+	for _, player in pairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(SelectedPart) then
+			if TeamCheck and player.Team == LocalPlayer.Team then continue end
+			local part = player.Character[SelectedPart]
+			if WallCheck and not IsVisible(part) then continue end
 
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild(targetPart) then
-            if teamCheck and player.Team == LocalPlayer.Team then continue end
-
-            local part = player.Character[targetPart]
-            local screenPos, onScreen = Camera:WorldToViewportPoint(part.Position)
-
-            if onScreen then
-                local distance = (Vector2.new(screenPos.X, screenPos.Y) - Vector2.new(Mouse.X, Mouse.Y)).Magnitude
-                if distance < shortestDistance then
-                    if wallCheck and not isVisible(part) then continue end
-                    shortestDistance = distance
-                    closestPlayer = player
-                end
-            end
-        end
-    end
-
-    return closestPlayer
+			local pos, onScreen = Camera:WorldToViewportPoint(part.Position)
+			local mousePos = UserInputService:GetMouseLocation()
+			local mag = (Vector2.new(pos.X, pos.Y) - Vector2.new(mousePos.X, mousePos.Y)).Magnitude
+			if mag < FOVRadius and mag < distance then
+				distance = mag
+				closest = part
+			end
+		end
+	end
+	return closest
 end
 
 RunService.RenderStepped:Connect(function()
-    fovCircle.Position = Vector2.new(Mouse.X, Mouse.Y)
+	fovCircle.Position = UserInputService:GetMouseLocation()
+	fovCircle.Radius = FOVRadius
 
-    if not aimbotEnabled then return end
-
-    local target = getClosestPlayer()
-    if target and target.Character and target.Character:FindFirstChild(targetPart) then
-        local aimPos = target.Character[targetPart].Position
-        Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimPos)
-    end
+	if AimbotEnabled then
+		local target = GetClosest()
+		if target then
+			Camera.CFrame = CFrame.new(Camera.CFrame.Position, target.Position)
+		end
+	end
 end)
 
-RunService.RenderStepped:Connect(function()
-    if hitboxEnabled then
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= LocalPlayer and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local part = plr.Character.HumanoidRootPart
-                pcall(function()
-                    part.Size = Vector3.new(hitboxSize, hitboxSize, hitboxSize)
-                    part.Transparency = hitboxTransparency
-                    part.BrickColor = hitboxColor
-                    part.Material = Enum.Material.Neon
-                    part.CanCollide = false
-                end)
-            end
-        end
-    end
-end)
+print("Aimbot UI Loaded!")
