@@ -1,0 +1,158 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- UI Setup
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+ScreenGui.Name = "SurviveTheKillerUI"
+ScreenGui.ResetOnSpawn = false
+
+local Main = Instance.new("Frame", ScreenGui)
+Main.Size = UDim2.new(0, 350, 0, 350)
+Main.Position = UDim2.new(0.5, -175, 0.5, -175)
+Main.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+Main.BorderSizePixel = 0
+Main.AnchorPoint = Vector2.new(0.5, 0.5)
+
+-- RGB Border
+local border = Instance.new("UIStroke", Main)
+border.Thickness = 2
+border.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+task.spawn(function()
+	while true do
+		for i = 0, 1, 0.01 do
+			border.Color = Color3.fromHSV(i, 1, 1)
+			task.wait()
+		end
+	end
+end)
+
+-- Drag
+local dragging, dragInput, dragStart, startPos
+Main.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		dragging = true
+		dragStart = input.Position
+		startPos = Main.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then dragging = false end
+		end)
+	end
+end)
+Main.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+end)
+game:GetService("UserInputService").InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+			startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
+
+-- Title
+local title = Instance.new("TextLabel", Main)
+title.Text = "📜 Survive The Killer"
+title.Size = UDim2.new(1, 0, 0, 40)
+title.BackgroundTransparency = 1
+title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+
+-- Credit
+local credit = Instance.new("TextLabel", Main)
+credit.Text = "Script by riko"
+credit.Size = UDim2.new(1, 0, 0, 25)
+credit.Position = UDim2.new(0, 0, 1, -25)
+credit.BackgroundTransparency = 1
+credit.TextColor3 = Color3.fromRGB(170, 0, 255)
+credit.Font = Enum.Font.GothamSemibold
+credit.TextSize = 14
+
+-- Toggle UI
+local toggleButton = Instance.new("TextButton", Main)
+toggleButton.Text = "CLOSE UI"
+toggleButton.Size = UDim2.new(0, 100, 0, 30)
+toggleButton.Position = UDim2.new(1, -110, 0, 10)
+toggleButton.BackgroundColor3 = Color3.fromRGB(80, 0, 0)
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Font = Enum.Font.Gotham
+toggleButton.TextSize = 14
+
+toggleButton.MouseButton1Click:Connect(function()
+	Main.Visible = not Main.Visible
+	toggleButton.Text = Main.Visible and "CLOSE UI" or "OPEN UI"
+end)
+
+-- Function Creator
+local function createButton(name, posY, callback)
+	local btn = Instance.new("TextButton", Main)
+	btn.Size = UDim2.new(0.8, 0, 0, 35)
+	btn.Position = UDim2.new(0.1, 0, 0, posY)
+	btn.Text = name
+	btn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.MouseButton1Click:Connect(function()
+		pcall(callback)
+		btn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+		wait(1)
+		btn.BackgroundColor3 = Color3.fromRGB(120, 0, 0)
+	end)
+end
+
+-- Script 1: TP Player (to killer)
+createButton("TP to Killer", 60, function()
+	for _, plr in pairs(Players:GetPlayers()) do
+		if plr ~= LocalPlayer and plr:FindFirstChild("Backpack") then
+			local killer = plr.Character or plr.CharacterAdded:Wait()
+			if killer then
+				LocalPlayer.Character:MoveTo(killer.HumanoidRootPart.Position + Vector3.new(0,0,2))
+			end
+		end
+	end
+end)
+
+-- Script 2: ESP
+createButton("ESP", 105, function()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer then
+			local Billboard = Instance.new("BillboardGui", player.Character:FindFirstChild("Head") or player.Character:WaitForChild("Head"))
+			Billboard.Size = UDim2.new(0,100,0,30)
+			Billboard.AlwaysOnTop = true
+
+			local nameTag = Instance.new("TextLabel", Billboard)
+			nameTag.Size = UDim2.new(1,0,1,0)
+			nameTag.Text = player.Name
+			nameTag.BackgroundTransparency = 1
+			nameTag.TextColor3 = Color3.fromRGB(255,0,0)
+			nameTag.TextScaled = true
+		end
+	end
+end)
+
+-- Script 3: Kill All
+createButton("Kill All", 150, function()
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character then
+			local args = {
+				[1] = player.Character
+			}
+			game:GetService("ReplicatedStorage"):WaitForChild("RemoteEvents"):WaitForChild("Damage"):FireServer(unpack(args))
+		end
+	end
+end)
+
+-- Script 4: Gamepass
+createButton("Get Gamepass", 195, function()
+	for _,v in pairs({"VIP", "Ghost", "Night Vision", "x2 XP"}) do
+		local fakeGP = Instance.new("BoolValue", LocalPlayer)
+		fakeGP.Name = v
+	end
+end)
+
+-- Script 5: Unlock Admin
+createButton("Unlock Admin", 240, function()
+	local Admin = Instance.new("BoolValue", LocalPlayer)
+	Admin.Name = "Admin"
+end)
