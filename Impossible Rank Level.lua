@@ -4,7 +4,6 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
-
 pcall(function()
 	StarterGui:SetCore("SendNotification", {
 		Title = "CraftCodeLua",
@@ -31,7 +30,7 @@ gui.Name = "AutoObbyUI"
 gui.ResetOnSpawn = false
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 280, 0, 220)
+frame.Size = UDim2.new(0, 280, 0, 260)
 frame.Position = UDim2.new(0.5, -140, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.Active = true
@@ -54,7 +53,7 @@ end)
 
 local title = Instance.new("TextLabel", frame)
 title.Text = "Impossible Obby Ranking"
-title.Size = UDim2.new(1, -10, 0, 30)
+title.Size = UDim2.new(1, -20, 0, 30)
 title.Position = UDim2.new(0, 10, 0, 5)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
@@ -64,7 +63,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 
 local function createButton(text, position, color)
 	local btn = Instance.new("TextButton", frame)
-	btn.Size = UDim2.new(0.8, 0, 0, 35)
+	btn.Size = UDim2.new(0.85, 0, 0, 35)
 	btn.Position = position
 	btn.BackgroundColor3 = color
 	btn.Text = text
@@ -75,9 +74,9 @@ local function createButton(text, position, color)
 	return btn
 end
 
-local startBtn = createButton("Start Auto Play", UDim2.new(0.5, -112, 0.5, -30), Color3.fromRGB(60, 180, 75))
-local stopBtn = createButton("Stop Auto Play", UDim2.new(0.5, -112, 0.5, 25), Color3.fromRGB(200, 60, 60))
-local removeBtn = createButton("Remove Spike", UDim2.new(0.5, -112, 0.5, 80), Color3.fromRGB(100, 100, 255))
+local startBtn = createButton("Start Auto Play", UDim2.new(0.5, -119, 0, 45), Color3.fromRGB(60, 180, 75))
+local stopBtn = createButton("Stop Auto Play", UDim2.new(0.5, -119, 0, 90), Color3.fromRGB(200, 60, 60))
+local removeBtn = createButton("Remove Spike", UDim2.new(0.5, -119, 0, 135), Color3.fromRGB(100, 100, 255))
 
 local closeBtn = Instance.new("TextButton", frame)
 closeBtn.Size = UDim2.new(0, 25, 0, 25)
@@ -95,7 +94,7 @@ end)
 local credit = Instance.new("TextLabel", frame)
 credit.Text = "-~ Script by CraftCodeLua ~-"
 credit.Size = UDim2.new(1, 0, 0, 20)
-credit.Position = UDim2.new(0, 0, 1, -20)
+credit.Position = UDim2.new(0, 0, 1, -25)
 credit.BackgroundTransparency = 1
 credit.Font = Enum.Font.Gotham
 credit.TextColor3 = Color3.fromRGB(160, 160, 255)
