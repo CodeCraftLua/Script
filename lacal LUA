@@ -1,0 +1,157 @@
+local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
+local Main = Instance.new("Frame")
+local UICorner = Instance.new("UICorner")
+local UIStroke = Instance.new("UIStroke")
+local Title = Instance.new("TextLabel")
+local Credit = Instance.new("TextLabel")
+local Close = Instance.new("TextButton")
+local toggles = {}
+
+ScreenGui.Name = "ModernUI"
+Main.Name = "Main"
+Main.Size = UDim2.new(0, 300, 0, 360)
+Main.Position = UDim2.new(0.3, 0, 0.2, 0)
+Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+Main.Active = true
+Main.Draggable = true
+Main.Parent = ScreenGui
+
+UICorner.CornerRadius = UDim.new(0, 10)
+UICorner.Parent = Main
+
+UIStroke.Thickness = 2
+UIStroke.Color = Color3.fromRGB(255, 0, 255)
+UIStroke.Parent = Main
+
+Title.Parent = Main
+Title.Text = "📜 Script Menu"
+Title.Size = UDim2.new(1, 0, 0, 40)
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.BackgroundTransparency = 1
+Title.Font = Enum.Font.GothamBold
+Title.TextSize = 18
+
+Credit.Parent = Main
+Credit.Text = "- Script by riko -"
+Credit.Size = UDim2.new(1, 0, 0, 20)
+Credit.Position = UDim2.new(0, 0, 0, 40)
+Credit.TextColor3 = Color3.fromRGB(180, 180, 180)
+Credit.BackgroundTransparency = 1
+Credit.Font = Enum.Font.Code
+Credit.TextSize = 14
+
+Close.Name = "Close"
+Close.Parent = Main
+Close.Text = "❌"
+Close.Size = UDim2.new(0, 30, 0, 30)
+Close.Position = UDim2.new(1, -35, 0, 5)
+Close.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+Close.TextColor3 = Color3.fromRGB(255, 255, 255)
+Close.Font = Enum.Font.GothamBold
+Close.TextSize = 16
+Close.MouseButton1Click:Connect(function()
+	Main.Visible = not Main.Visible
+end)
+
+-- Function buat toggle
+local function createToggle(name, parent, callback)
+	local button = Instance.new("TextButton")
+	button.Parent = parent
+	button.Size = UDim2.new(0, 260, 0, 35)
+	button.BackgroundColor3 = Color3.fromRGB(100, 0, 0)
+	button.Text = name .. " [OFF]"
+	button.TextColor3 = Color3.fromRGB(255, 255, 255)
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 14
+
+	local active = false
+	button.MouseButton1Click:Connect(function()
+		active = not active
+		button.Text = name .. (active and " [ON]" or " [OFF]")
+		button.BackgroundColor3 = active and Color3.fromRGB(0, 170, 0) or Color3.fromRGB(100, 0, 0)
+		callback(active)
+	end)
+
+	return button
+end
+
+-- Fungsi toggle + script
+local toggleList = {
+	{ "InfJump", function(state)
+		if state then
+			_G.InfJump = true
+			game:GetService("UserInputService").JumpRequest:Connect(function()
+				if _G.InfJump then
+					game.Players.LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+				end
+			end)
+		else
+			_G.InfJump = false
+		end
+	end},
+
+	{ "ESP Box", function(state)
+		if state then
+			local esp = Instance.new("Highlight")
+			for _, v in pairs(game.Players:GetPlayers()) do
+				if v ~= game.Players.LocalPlayer and v.Character then
+					local h = esp:Clone()
+					h.FillColor = Color3.new(1, 1, 1)
+					h.OutlineColor = Color3.new(1, 1, 1)
+					h.FillTransparency = 0.5
+					h.OutlineTransparency = 0
+					h.Adornee = v.Character
+					h.Parent = v.Character
+				end
+			end
+		else
+			for _, v in pairs(game.Players:GetPlayers()) do
+				if v.Character then
+					for _, c in pairs(v.Character:GetChildren()) do
+						if c:IsA("Highlight") then
+							c:Destroy()
+						end
+					end
+				end
+			end
+		end
+	end},
+
+	{ "Killer x3", function(state)
+		_G.KillAura = state
+		while _G.KillAura do
+			task.wait(0.5)
+			for _, v in pairs(game:GetService("Players"):GetPlayers()) do
+				if v ~= game.Players.LocalPlayer and v.Character and v.Character:FindFirstChild("HumanoidRootPart") then
+					v.Character.HumanoidRootPart.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,0,-3)
+				end
+			end
+		end
+	end},
+
+	{ "BoostFPS", function(state)
+		if state then
+			sethiddenproperty(game, "LightingTechnology", Enum.Technology.Compatibility)
+			for _, v in pairs(workspace:GetDescendants()) do
+				if v:IsA("BasePart") then
+					v.Material = Enum.Material.Plastic
+					v.Reflectance = 0
+				end
+			end
+		end
+	end},
+
+	{ "AntiLag", function(state)
+		if state then
+			settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+		else
+			settings().Rendering.QualityLevel = Enum.QualityLevel.Automatic
+		end
+	end}
+}
+
+-- Buat semua tombol
+for i, data in ipairs(toggleList) do
+	local btn = createToggle(data[1], Main, data[2])
+	btn.Position = UDim2.new(0, 20, 0, 70 + (i-1)*50)
+end
