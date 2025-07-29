@@ -4,19 +4,6 @@ local RunService = game:GetService("RunService")
 local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 
-local gui = Instance.new("ScreenGui")
-gui.Name = "AutoObbyUI"
-gui.ResetOnSpawn = false
-if gethui then
-	gui.Parent = gethui()
-elseif syn and syn.protect_gui then
-	syn.protect_gui(gui)
-	gui.Parent = game.CoreGui
-elseif game:FindFirstChild("CoreGui") then
-	gui.Parent = game.CoreGui
-else
-	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
-end
 
 pcall(function()
 	StarterGui:SetCore("SendNotification", {
@@ -28,19 +15,35 @@ pcall(function()
 	})
 end)
 
-local frame = Instance.new("Frame", gui)
+local gui = Instance.new("ScreenGui")
+if gethui then
+	gui.Parent = gethui()
+elseif syn and syn.protect_gui then
+	syn.protect_gui(gui)
+	gui.Parent = game.CoreGui
+elseif game:FindFirstChild("CoreGui") then
+	gui.Parent = game.CoreGui
+else
+	gui.Parent = LocalPlayer:WaitForChild("PlayerGui")
+end
+
+gui.Name = "AutoObbyUI"
+gui.ResetOnSpawn = false
+
+local frame = Instance.new("Frame")
 frame.Size = UDim2.new(0, 280, 0, 220)
 frame.Position = UDim2.new(0.5, -140, 0.3, 0)
 frame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 frame.Active = true
 frame.Draggable = true
-frame.BorderSizePixel = 0
+frame.Parent = gui
 Instance.new("UICorner", frame).CornerRadius = UDim.new(0, 10)
 
 local stroke = Instance.new("UIStroke", frame)
 stroke.Thickness = 2
 stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-task.spawn(function()
+
+spawn(function()
 	while gui and stroke do
 		for h = 0, 1, 0.01 do
 			stroke.Color = Color3.fromHSV(h, 1, 1)
@@ -59,51 +62,34 @@ title.TextColor3 = Color3.new(1, 1, 1)
 title.TextSize = 16
 title.TextXAlignment = Enum.TextXAlignment.Left
 
-local startBtn = Instance.new("TextButton", frame)
-startBtn.Size = UDim2.new(0.8, 0, 0, 40)
-startBtn.Position = UDim2.new(0.5, -112, 0.5, -30)
-startBtn.BackgroundColor3 = Color3.fromRGB(60, 180, 75)
-startBtn.Text = "Start Auto Play"
-startBtn.Font = Enum.Font.GothamBold
-startBtn.TextSize = 14
-startBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", startBtn).CornerRadius = UDim.new(0, 8)
+local function createButton(text, position, color)
+	local btn = Instance.new("TextButton", frame)
+	btn.Size = UDim2.new(0.8, 0, 0, 35)
+	btn.Position = position
+	btn.BackgroundColor3 = color
+	btn.Text = text
+	btn.Font = Enum.Font.GothamBold
+	btn.TextSize = 14
+	btn.TextColor3 = Color3.new(1, 1, 1)
+	Instance.new("UICorner", btn)
+	return btn
+end
 
-local stopBtn = Instance.new("TextButton", frame)
-stopBtn.Size = UDim2.new(0.8, 0, 0, 35)
-stopBtn.Position = UDim2.new(0.5, -112, 0.5, 25)
-stopBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-stopBtn.Text = "Stop Auto Play"
-stopBtn.Font = Enum.Font.GothamBold
-stopBtn.TextSize = 14
-stopBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", stopBtn).CornerRadius = UDim.new(0, 8)
+local startBtn = createButton("Start Auto Play", UDim2.new(0.5, -112, 0.5, -30), Color3.fromRGB(60, 180, 75))
+local stopBtn = createButton("Stop Auto Play", UDim2.new(0.5, -112, 0.5, 25), Color3.fromRGB(200, 60, 60))
+local removeBtn = createButton("Remove Spike", UDim2.new(0.5, -112, 0.5, 80), Color3.fromRGB(100, 100, 255))
 
-local removeBtn = Instance.new("TextButton", frame)
-removeBtn.Size = UDim2.new(0.8, 0, 0, 35)
-removeBtn.Position = UDim2.new(0.5, -112, 0.5, 80)
-removeBtn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
-removeBtn.Text = "Remove Spike"
-removeBtn.Font = Enum.Font.GothamBold
-removeBtn.TextSize = 14
-removeBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", removeBtn).CornerRadius = UDim.new(0, 8)
-
-removeBtn.MouseButton1Click:Connect(function()
-	local client = workspace:FindFirstChild("ClientParts")
-	if client then
-		local kill = client:FindFirstChild("KillBricks")
-		if kill then
-			kill:Destroy()
-			removeBtn.Text = "Spike Removed!"
-			task.wait(1)
-			removeBtn.Text = "Remove Spike"
-		else
-			removeBtn.Text = "Not Found"
-			task.wait(1)
-			removeBtn.Text = "Remove Spike"
-		end
-	end
+local closeBtn = Instance.new("TextButton", frame)
+closeBtn.Size = UDim2.new(0, 25, 0, 25)
+closeBtn.Position = UDim2.new(1, -30, 0, 5)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", closeBtn)
+closeBtn.MouseButton1Click:Connect(function()
+	gui:Destroy()
 end)
 
 local credit = Instance.new("TextLabel", frame)
@@ -115,20 +101,6 @@ credit.Font = Enum.Font.Gotham
 credit.TextColor3 = Color3.fromRGB(160, 160, 255)
 credit.TextSize = 12
 
-local closeBtn = Instance.new("TextButton", frame)
-closeBtn.Size = UDim2.new(0, 25, 0, 25)
-closeBtn.Position = UDim2.new(1, -30, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
-closeBtn.Text = "X"
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 14
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", closeBtn)
-
-closeBtn.MouseButton1Click:Connect(function()
-	gui:Destroy()
-end)
-
 local flying = false
 
 local function getCharacter()
@@ -136,15 +108,12 @@ local function getCharacter()
 end
 
 local function flyTo(pos)
-	local char = getCharacter()
-	local root = char:WaitForChild("HumanoidRootPart")
-	local distance = (root.Position - pos).Magnitude
-	local time = distance / 100
-	local tweenInfo = TweenInfo.new(time, Enum.EasingStyle.Linear)
-	local goal = {CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))}
-	local tween = TweenService:Create(root, tweenInfo, goal)
-	tween:Play()
-	tween.Completed:Wait()
+	local root = getCharacter():WaitForChild("HumanoidRootPart")
+	local time = (root.Position - pos).Magnitude / 100
+	TweenService:Create(root, TweenInfo.new(time, Enum.EasingStyle.Linear), {
+		CFrame = CFrame.new(pos + Vector3.new(0, 5, 0))
+	}):Play()
+	task.wait(time)
 end
 
 local function autoPlay()
@@ -152,16 +121,12 @@ local function autoPlay()
 	if not folder then return end
 
 	local list = {}
-	for _, cp in pairs(folder:GetChildren()) do
+	for _, cp in ipairs(folder:GetChildren()) do
 		if cp:IsA("BasePart") then
-			local num = tonumber(cp.Name:match("%d+")) or 0
-			table.insert(list, {part = cp, num = num})
+			table.insert(list, {part = cp, num = tonumber(cp.Name:match("%d+")) or 0})
 		end
 	end
-
-	table.sort(list, function(a, b)
-		return a.num < b.num
-	end)
+	table.sort(list, function(a, b) return a.num < b.num end)
 
 	repeat
 		for _, checkpoint in ipairs(list) do
@@ -171,7 +136,6 @@ local function autoPlay()
 			task.wait(0.5)
 		end
 	until not flying
-
 	startBtn.Text = "Start Auto Play"
 end
 
@@ -187,25 +151,39 @@ stopBtn.MouseButton1Click:Connect(function()
 	startBtn.Text = "Start Auto Play"
 end)
 
+removeBtn.MouseButton1Click:Connect(function()
+	local folder = workspace:FindFirstChild("ClientParts")
+	if folder then
+		local kill = folder:FindFirstChild("KillBricks")
+		if kill then
+			kill:Destroy()
+			removeBtn.Text = "Spike Removed!"
+			task.wait(1)
+			removeBtn.Text = "Remove Spike"
+		else
+			removeBtn.Text = "Not Found"
+			task.wait(1)
+			removeBtn.Text = "Remove Spike"
+		end
+	end
+end)
+
 local fpsLabel = Instance.new("TextLabel", gui)
 fpsLabel.Size = UDim2.new(0, 120, 0, 25)
 fpsLabel.Position = UDim2.new(0.5, -60, 1, -60)
 fpsLabel.BackgroundTransparency = 0.5
 fpsLabel.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 fpsLabel.TextColor3 = Color3.new(1, 1, 1)
-fpsLabel.TextStrokeTransparency = 0
 fpsLabel.Font = Enum.Font.GothamBold
 fpsLabel.TextSize = 14
 fpsLabel.Text = "FPS: ..."
-fpsLabel.ZIndex = 1000
 Instance.new("UICorner", fpsLabel)
 
-local fps = 0
-local last = tick()
+local fps, last = 0, tick()
 RunService.RenderStepped:Connect(function()
 	fps += 1
 	if tick() - last >= 1 then
-		fpsLabel.Text = "FPS: " .. tostring(fps)
+		fpsLabel.Text = "FPS: " .. fps
 		fps = 0
 		last = tick()
 	end
