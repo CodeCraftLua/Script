@@ -1,15 +1,26 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RunService = game:GetService("RunService")
+local StarterGui = game:GetService("StarterGui")
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+pcall(function()
+    StarterGui:SetCore("SendNotification", {
+        Title = "CraftCodeLua",
+        Text = "If there is a bug let me know.",
+        Button1 = "Yes",
+        Button2 = "Cancel",
+        Duration = 30
+    })
+end)
 
 local gui = Instance.new("ScreenGui")
 if gethui then gui.Parent = gethui() else gui.Parent = game.CoreGui end
 gui.Name = "W6AutoCheckpointUI"
 
 local frame = Instance.new("Frame")
-frame.Size = UDim2.new(0, 200, 0, 80)
+frame.Size = UDim2.new(0, 200, 0, 130)
 frame.Position = UDim2.new(0.5, -100, 0.4, 0)
 frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 frame.Active = true
@@ -65,6 +76,31 @@ toggleBtn.Font = Enum.Font.GothamBold
 toggleBtn.TextColor3 = Color3.new(1, 1, 1)
 toggleBtn.TextSize = 16
 Instance.new("UICorner", toggleBtn)
+
+local fpsLabel = Instance.new("TextLabel", frame)
+fpsLabel.Size = UDim2.new(1, -10, 0, 20)
+fpsLabel.Position = UDim2.new(0, 5, 0, 80)
+fpsLabel.BackgroundTransparency = 1
+fpsLabel.Font = Enum.Font.GothamBold
+fpsLabel.TextSize = 14
+fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+fpsLabel.Text = "FPS: 0"
+fpsLabel.TextXAlignment = Enum.TextXAlignment.Center
+fpsLabel.TextYAlignment = Enum.TextYAlignment.Center
+
+spawn(function()
+    local lastTime = tick()
+    local frames = 0
+    while true do
+        frames = frames + 1
+        if tick() - lastTime >= 1 then
+            fpsLabel.Text = "FPS: " .. frames
+            frames = 0
+            lastTime = tick()
+        end
+        RunService.RenderStepped:Wait()
+    end
+end)
 
 local currentCheckpoint = 1
 local list = {}
@@ -122,7 +158,7 @@ toggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
-local credit = Instance.new("TextLabel")
+local credit = Instance.new("TextLabel", frame)
 credit.Text = "Script by CraftCodeLua"
 credit.Size = UDim2.new(1, 0, 0, 20)
 credit.Position = UDim2.new(0, 0, 1, -20)
@@ -132,22 +168,9 @@ credit.TextColor3 = Color3.fromRGB(150, 150, 255)
 credit.TextSize = 12
 credit.TextStrokeTransparency = 0.5
 credit.TextYAlignment = Enum.TextYAlignment.Center
-credit.Parent = gui
 
-local fpsLabel = Instance.new("TextLabel")
-fpsLabel.Size = UDim2.new(0, 120, 0, 20)
-fpsLabel.Position = UDim2.new(0.5, -60, 1, -45)
-fpsLabel.BackgroundTransparency = 1
-fpsLabel.Font = Enum.Font.GothamBold
-fpsLabel.TextSize = 14
-fpsLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-fpsLabel.Text = "FPS: 0"
-fpsLabel.Parent = gui
-
-local fps = 0
-local last = tick()
-RunService.RenderStepped:Connect(function()
-    fps = math.floor(1 / (tick() - last))
-    last = tick()
-    fpsLabel.Text = "FPS: " .. fps
-end)
+toggleBtn.Parent = frame
+title.Parent = frame
+closeBtn.Parent = frame
+credit.Parent = frame
+fpsLabel.Parent = frame
